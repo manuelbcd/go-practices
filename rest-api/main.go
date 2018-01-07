@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"github.com/gorilla/mux"
+	"fmt"
 )
 
 type Person struct {
@@ -31,6 +32,7 @@ func main() {
 	router.HandleFunc("/people/{id}", GetPerson).Methods("GET")
 	router.HandleFunc("/people/{id}", CreatePerson).Methods("POST")
 	router.HandleFunc("/people/{id}", DeletePerson).Methods("DELETE")
+	router.NotFoundHandler = http.HandlerFunc(notFound)
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
 
@@ -38,8 +40,26 @@ func GetPeople(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(people)
 }
 
-func GetPerson(w http.ResponseWriter, r *http.Request) {}
+func GetPerson(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	found := false
+	for _, item := range people {
+		if item.ID == params["id"]{
+			json.NewEncoder(w).Encode(item);
+			found = true
+		}
+	}
+
+	if(!found){
+		notFound(w, r)
+		return
+	}
+}
 
 func CreatePerson(w http.ResponseWriter, r *http.Request) {}
 
 func DeletePerson(w http.ResponseWriter, r *http.Request) {}
+
+func notFound(w http.ResponseWriter, r *http.Request){
+	fmt.Fprint(w, "404 Not found")
+}
